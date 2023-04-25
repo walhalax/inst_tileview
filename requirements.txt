@@ -1,3 +1,1 @@
 streamlit
-itertools
-python_dotenv
