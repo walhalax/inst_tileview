@@ -3,15 +3,12 @@ import json
 import datetime
 import streamlit as st
 from itertools import zip_longest
-from dotenv import load_dotenv
 import os
-
-load_dotenv()
 
 def basic_info():
     config = dict()
-    config["access_token"] = os.getenv('access_token')
-    config['instagram_account_id'] = os.getenv('instagram_account_id') or ''
+    config["access_token"] = st.secrets["access_token"]
+    config['instagram_account_id'] = st.secrets.get("instagram_account_id", "")
     config["version"] = 'v16.0'
     config["graph_domain"] = 'https://graph.facebook.com/'
     config["endpoint_base"] = config["graph_domain"] + config["version"] + '/'
@@ -60,11 +57,11 @@ st.set_page_config(layout="wide")
 params = basic_info()
 
 if not params['instagram_account_id']:
-    st.write('.envファイルにinstagram_account_idを確認')
+    st.write('instagram_account_idを確認')
 else:
     response = getUserMedia(params)
     if not response:
-        st.write('.envファイルにaccess_tokenを確認')
+        st.write('access_tokenを確認')
     else:
         posts = response['json_data']['data'][::-1]
 
