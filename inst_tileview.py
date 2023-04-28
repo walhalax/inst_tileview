@@ -98,7 +98,7 @@ else:
                         st.write(f"👍: {post['like_count']} ({'+' if like_count_diff >= 0 else ''}{like_count_diff})\n💬: {post['comments_count']} ({'+' if comment_count_diff >= 0 else ''}{comment_count_diff})\n")
                         caption = post['caption']
                         if caption is not None:
-                            caption = caption.strip()
+                            caption = post.get('caption', None)
                             if "[Description]" in caption:
                                 caption = caption.split("[Description]")[1].lstrip()
                             if "[Tags]" in caption:
