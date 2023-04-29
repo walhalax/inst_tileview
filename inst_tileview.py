@@ -126,8 +126,8 @@ else:
                         like_count_diff = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
                         comment_count_diff = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
                         st.markdown(
-                            f"👍: {post['like_count']} <span style='{'' if like_count_diff != max_like_diff or max_like_diff == 0 else 'color:red;'}'>({'+' if like_count_diff >= 0 else ''}{like_count_diff})</span>"
-                            f"\n💬: {post['comments_count']} <span style='{'' if comment_count_diff != max_comment_diff or max_comment_diff == 0 else 'color:red;'}'>({'+' if comment_count_diff >= 0 else ''}{comment_count_diff})</span>",
+                            f"👍: {post['like_count']} <span style='{'' if like_count_diff != max_like_diff or max_like_diff == 0 else 'color:green;'}'>({'+' if like_count_diff >= 0 else ''}{like_count_diff})</span>"
+                            f"\n💬: {post['comments_count']} <span style='{'' if comment_count_diff != max_comment_diff or max_comment_diff == 0 else 'color:green;'}'>({'+' if comment_count_diff >= 0 else ''}{comment_count_diff})</span>",
                             unsafe_allow_html=True)
                         caption = post['caption']
                         if caption is not None:
