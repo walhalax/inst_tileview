@@ -119,9 +119,10 @@ else:
                         st.write(f"{datetime.datetime.strptime(post['timestamp'], '%Y-%m-%dT%H:%M:%S%z').astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')}")
                         like_count_diff = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
                         comment_count_diff = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
-                        st.markdown(f"👍: {post['like_count']} <span style='{'' if like_count_diff != max_like_diff else 'color:red;'}'>({'+' if like_count_diff >= 0 else ''}{like_count_diff})</span>"
-                                    f"\n💬: {post['comments_count']} <span style='{'' if comment_count_diff != max_comment_diff else 'color:red;'}'>({'+' if comment_count_diff >= 0 else ''}{comment_count_diff})</span>",
-                                    unsafe_allow_html=True)
+                        st.markdown(
+                            f"👍: {post['like_count']} <span style='{'' if like_count_diff != max_like_diff else 'color:red;'}'>({'+' if like_count_diff >= 0 else ''}{like_count_diff})</span>"
+                            f"\n💬: {post['comments_count']} <span style='{'' if comment_count_diff != max_comment_diff else 'color:red;'}'>({'+' if comment_count_diff >= 0 else ''}{comment_count_diff})</span>",
+                            unsafe_allow_html=True)
                         caption = post['caption']
                         if caption is not None:
                             caption = caption.strip()
