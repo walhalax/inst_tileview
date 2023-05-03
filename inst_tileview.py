@@ -9,7 +9,7 @@ import pandas as pd
 import numpy as np
 import japanize_matplotlib
 import matplotlib.pyplot as plt
-
+from matplotlib.ticker import FixedLocator
 
 def basic_info():
     config = dict()
@@ -96,7 +96,7 @@ else:
         yesterday = (datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
         follower_diff = followers_count - getCount(count_filename).get(yesterday, {}).get('followers_count', followers_count)
 
-        upper_menu = st.expander("Upper Menu Options", expanded=False)
+        upper_menu = st.expander("メニューを開閉", expanded=False)
         with upper_menu:
             show_description = st.checkbox("キャプションを表示")
             show_summary_chart = st.checkbox("サマリーチャートを表示")
