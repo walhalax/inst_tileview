@@ -5,9 +5,11 @@ import streamlit as st
 from itertools import zip_longest
 import os
 import seaborn as sns
-import matplotlib.pyplot as plt
 import pandas as pd
+import numpy as np
 import japanize_matplotlib
+import matplotlib.pyplot as plt
+
 
 def basic_info():
     config = dict()
@@ -86,140 +88,151 @@ else:
         user_data = user_response['json_data']
         followers_count = user_data.get('followers_count', 0)
 
-NUM_COLUMNS = 6
-MAX_WIDTH = 1000
-BOX_WIDTH = int(MAX_WIDTH / NUM_COLUMNS)
-BOX_HEIGHT = 400
+        NUM_COLUMNS = 6
+        MAX_WIDTH = 1000
+        BOX_WIDTH = int(MAX_WIDTH / NUM_COLUMNS)
+        BOX_HEIGHT = 400
 
-yesterday = (datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-follower_diff = followers_count - getCount(count_filename).get(yesterday, {}).get('followers_count', followers_count)
-st.markdown(f'''
-    Follower: {followers_count} ({'+' if follower_diff >= 0 else ''}{follower_diff})
-    ''', unsafe_allow_html=True)
+        yesterday = (datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
+        follower_diff = followers_count - getCount(count_filename).get(yesterday, {}).get('followers_count', followers_count)
 
-show_description = st.checkbox("キャプションを表示")
-show_summary_chart = st.checkbox("サマリーチャートを表示")
-show_like_comment_chart = st.checkbox("いいね/コメント数グラフを表示")
+        upper_menu = st.expander("Upper Menu Options", expanded=False)
+        with upper_menu:
+            show_description = st.checkbox("キャプションを表示")
+            show_summary_chart = st.checkbox("サマリーチャートを表示")
+            show_likes_comments_chart = st.checkbox("いいね/コメント数チャートの表示")
 
-posts.reverse()
-post_groups = [list(filter(None, group)) for group in zip_longest(*[iter(posts)] * NUM_COLUMNS)]
+        posts.reverse()
+        post_groups = [list(filter(None, group)) for group in zip_longest(*[iter(posts)] * NUM_COLUMNS)]
 
-count = getCount(count_filename)
-today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d')
+        count = getCount(count_filename)
+        today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d')
 
-if today not in count:
-    count[today] = {}
+        if today not in count:
+            count[today] = {}
 
-count[today]['followers_count'] = followers_count
+        count[today]['followers_count'] = followers_count
 
-if datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%H:%M') == '23:59':
-    count[yesterday] = count[today]
+        if datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%H:%M') == '23:59':
+            count[yesterday] = count[today]
 
-max_like_diff = 0
-max_comment_diff = 0
-summary_chart_data = {"Date": [], "Count": [], "Type": []}
-
-for post_group in post_groups:
-    for post in post_group:
-        like_count_diff = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
-        comment_count_diff = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
-        max_like_diff = max(like_count_diff, max_like_diff)
-        max_comment_diff = max(comment_count_diff, max_comment_diff)
-
-if show_summary_chart:
-    for date in count.keys():
-        if date != today:
-            summary_chart_data["Date"].append(datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d'))
-            summary_chart_data["Count"].append(count[date].get("followers_count", 0))
-            summary_chart_data["Type"].append("フォロワー")
-        for post_id in count[date].keys():
-            if post_id not in ["followers_count"]:
-                summary_chart_data["Date"].append(datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d'))
-                summary_chart_data["Count"].append(count[date][post_id].get("like_count", 0))
-                summary_chart_data["Type"].append("いいね")
-                summary_chart_data["Date"].append(datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d'))
-                summary_chart_data["Count"].append(count[date][post_id].get("comments_count", 0))
-                summary_chart_data["Type"].append("コメント")
-
-    summary_chart_df = pd.DataFrame(summary_chart_data)
-    fig, ax1 = plt.subplots(figsize=(15, 10))
-    summary_chart_palette = {"フォロワー": "lightblue", "いいね": "orange", "コメント": "green"}
-    sns.lineplot(data=summary_chart_df[summary_chart_df["Type"] != "コメント"], x="Date", y="Count", hue="Type", palette=summary_chart_palette, ax=ax1)
-    ax1.set_xlabel("日付")
-    ax1.set_ylabel("いいね/フォロワー")
-
-    ax2 = ax1.twinx()
-    sns.lineplot(data=summary_chart_df[summary_chart_df["Type"] == "コメント"], x="Date", y="Count", color="green", ax=ax2)
-    ax2.set_ylabel("コメント")
-
-    plt.title("日別 サマリーチャート")
-    st.pyplot(fig)
-
-for post_group in post_groups:
-    with st.container():
-        columns = st.columns(NUM_COLUMNS)
-        for i, post in enumerate(post_group):
-            with columns[i]:
-                st.image(post['media_url'], width=BOX_WIDTH, use_column_width=True)
-                st.write(f"{datetime.datetime.strptime(post['timestamp'], '%Y-%m-%dT%H:%M:%S%z').astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')}")
+        max_like_diff = 0
+        max_comment_diff = 0
+        total_like_diff = 0
+        total_comment_diff = 0
+        for post_group in post_groups:
+            for post in post_group:
                 like_count_diff = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
                 comment_count_diff = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
-                st.markdown(
-                f"👍: {post['like_count']} <span style='{'' if like_count_diff != max_like_diff or max_like_diff == 0 else 'color:green;'}'>({'+1' if like_count_diff >= 0 else ''}{like_count_diff})"
-                f"\n💬: {post['comments_count']} <span style='{'' if comment_count_diff != max_comment_diff or max_comment_diff == 0 else 'color:green;'}'>({'+1' if comment_count_diff >= 0 else ''}{comment_count_diff})",
-                unsafe_allow_html=True)
+                max_like_diff = max(like_count_diff, max_like_diff)
+                max_comment_diff = max(comment_count_diff, max_comment_diff)
+                total_like_diff += like_count_diff
+                total_comment_diff += comment_count_diff
 
-                likes_diff: int = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
-                comments_diff: int = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
-                max_like_diff = max(likes_diff, max_like_diff)
-                max_comment_diff = max(comments_diff, max_comment_diff)
+        st.markdown(
+            f'<h4 style="font-size:1.2em;">フォロワー: {followers_count} ({"+" if follower_diff > 0 else ("-" if follower_diff < 0 else "")}{abs(follower_diff)}) / 当日いいね数: {total_like_diff} / 当日コメント数: {total_comment_diff}</h4>',
+            unsafe_allow_html=True)
 
-                if show_like_comment_chart:
-                    like_comment_chart_data = {"Date": [], "Count": [], "Type": []}
-                    for date in count.keys():
-                        if date != today and post["id"] in count[date]:
-                            prev_count = count[date][post["id"]]
-                            likes_diff = post['like_count'] - prev_count.get("like_count", 0)
-                            comments_diff = post['comments_count'] - prev_count.get("comments_count", 0)
+        if show_summary_chart:
+            st.markdown("**")
+            # Prepare data for the summary chart
+            daily_diff = []
+            for key, value in count.items():
+                date = datetime.datetime.strptime(key, "%Y-%m-%d")
+                daily_data = {"Date": date,
+                              "Likes": 0,
+                              "Comments": 0,
+                              "Followers": value.get("followers_count", 0)}
+                for post_id, post_data in value.items():
+                    if post_id != "followers_count":
+                        daily_data["Likes"] += post_data.get("like_count", 0)
+                        daily_data["Comments"] += post_data.get("comments_count", 0)
+                daily_diff.append(daily_data)
+            daily_diff_df = pd.DataFrame(daily_diff)
+            daily_diff_df["Likes_Diff"] = daily_diff_df["Likes"].diff().fillna(0)
+            daily_diff_df["Comments_Diff"] = daily_diff_df["Comments"].diff().fillna(0)
+            daily_diff_df["Followers_Diff"] = daily_diff_df["Followers"].diff().fillna(0)
 
-                            like_comment_chart_data["Date"].append(datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d'))
-                            like_comment_chart_data["Count"].append(likes_diff)
-                            like_comment_chart_data["Type"].append("Like")
+            # Plot the summary chart
+            sns.set_style("whitegrid")
+            fig, ax1 = plt.subplots(figsize=(12, 6))
+            ax2 = ax1.twinx()
+            sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Followers_Diff"], ax=ax1, color="blue", label="フォロワー")
+            sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Likes_Diff"], ax=ax1, color="orange", label="いいね")
+            sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Comments_Diff"], ax=ax2, color="green", label="コメント")
+            h1, l1 = ax1.get_legend_handles_labels()
+            h2, l2 = ax2.get_legend_handles_labels()
+            ax1.legend(h1 + h2, l1 + l2, loc="upper left")
+            ax1.set_xlabel("日付")
+            ax1.set_ylabel("フォロワー数/全いいね数")
+            ax2.set_ylabel("全コメント数")
+            ax1.set_xlim([daily_diff_df['Date'].min(), daily_diff_df['Date'].max()])
+            ax1.set_xticklabels([d.strftime('%m/%d') for d in daily_diff_df['Date']])
+            plt.xticks(rotation=45)
+            st.pyplot(fig)
 
-                            like_comment_chart_data["Date"].append(datetime.datetime.strptime(date, '%Y-%m-%d').strftime('%m/%d'))
-                            like_comment_chart_data["Count"].append(comments_diff)
-                            like_comment_chart_data["Type"].append("Comment")
+        for post_group in post_groups:
+            with st.container():
+                columns = st.columns(NUM_COLUMNS)
+                for i, post in enumerate(post_group):
+                    with columns[i]:
+                        st.image(post['media_url'], width=BOX_WIDTH, use_column_width=True)
+                        st.write(f"{datetime.datetime.strptime(post['timestamp'], '%Y-%m-%dT%H:%M:%S%z').astimezone(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d %H:%M:%S')}")
+                        like_count_diff = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
+                        comment_count_diff = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
+                        st.markdown(
+                            f"👍: {post['like_count']} <span style='{'' if like_count_diff != max_like_diff or max_like_diff == 0 else 'color:green;'}'>({like_count_diff:+d})</span>"
+                            f"\n💬: {post['comments_count']} <span style='{'' if comment_count_diff != max_comment_diff or max_comment_diff == 0 else 'color:green;'}'>({comment_count_diff:+d})</span>",
+                            unsafe_allow_html=True)
+                        caption = post['caption']
+                        if caption is not None:
+                            caption = caption.strip()
+                            if "[Description]" in caption:
+                                caption = caption.split("[Description]")[1].lstrip()
+                            if "[Tags]" in caption:
+                                caption = caption.split("[Tags]")[0].rstrip()
+                            caption = caption.replace("#", "")
+                            caption = caption.replace("[model]", "👗")
+                            caption = caption.replace("[Equip]", "📷")
+                            caption = caption.replace("[Develop]", "🖨")
+                            if show_description:
+                                st.write(caption or "No caption provided")
+                            else:
+                                st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
 
-                    if like_comment_chart_data["Date"]:
-                        like_comment_chart_df = pd.DataFrame(like_comment_chart_data)
-                        fig, ax3 = plt.subplots(figsize=(5, 3))
-                        like_comment_chart_palette = {"Like": "orange", "Comment": "green"}
-                        sns.lineplot(data=like_comment_chart_df[like_comment_chart_df["Type"] == "Like"], x="Date", y="Count", color="orange", ax=ax3)
-                        ax3.set_xlabel("日付")
-                        ax3.set_ylabel("いいね")
+                        if show_likes_comments_chart:
+                            post_id = post['id']
+                            daily_data = []
+                            for key, value in count.items():
+                                date = datetime.datetime.strptime(key, "%Y-%m-%d")
+                                daily_data.append({"Date": date,
+                                                    "Likes": value.get(post_id, {}).get("like_count", 0),
+                                                    "Comments": value.get(post_id, {}).get("comments_count", 0)})
+                            daily_df = pd.DataFrame(daily_data)
+                            daily_df["Likes_Diff"] = daily_df["Likes"].diff().fillna(0)
+                            daily_df["Comments_Diff"] = daily_df["Comments"].diff().fillna(0)
 
-                        ax4 = ax3.twinx()
-                        sns.lineplot(data=like_comment_chart_df[like_comment_chart_df["Type"] == "Comment"], x="Date", y="Count", color="green", ax=ax4)
-                        ax4.set_ylabel("コメント")
+                            sns.set_style("whitegrid")
+                            fig, ax1 = plt.subplots(figsize=(6, 3))
+                            ax2 = ax1.twinx()
+                            sns.lineplot(x=daily_df['Date'], y=daily_df["Likes_Diff"], ax=ax1, color="orange", label="いいね")
+                            sns.lineplot(x=daily_df['Date'], y=daily_df["Comments_Diff"], ax=ax2, color="green", label="コメント")
+                            h1, l1 = ax1.get_legend_handles_labels()
+                            h2, l2 = ax2.get_legend_handles_labels()
+                            ax1.legend(h1 + h2, l1 + l2, loc="upper left")
+                            ax1.set_xlabel("日付")
+                            ax1.set_ylabel("いいね数")
+                            ax2.set_ylabel("コメント数")
+                            ax1.set_xlim([daily_df['Date'].min(), daily_df['Date'].max()])
+                            ax1.set_xticklabels([d.strftime('%m/%d') for d in daily_df['Date']])  # daily_diff_df を daily_df に変更しました。
+                            plt.xticks(rotation=45)
+                            st.pyplot(fig)
 
-                        plt.title("日別 いいね/コメント数")
-                        st.pyplot(fig)
+                            if show_description:
+                                st.write(caption or "No caption provided")
+                            else:
+                                st.write("")
 
-                caption = post['caption']
-                if caption is not None:
-                    caption = caption.strip()
-                    if "[Description]" in caption:
-                        caption = caption.split("[Description]")[1].lstrip()
-                    if "[Tags]" in caption:
-                        caption = caption.split("[Tags]")[0].rstrip()
-                    caption = caption.replace("#", "")
-                    caption = caption.replace("[model]", "👗")
-                    caption = caption.replace("[Equip]", "📷")
-                    caption = caption.replace("[Develop]", "🖨")
-                    if show_description:
-                        st.write(caption or "No caption provided")
-                    else:
-                        st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
-                    count[today][post['id']] = {'like_count': post['like_count'], 'comments_count': post['comments_count']}
+                            count[today][post['id']] = {'like_count': post['like_count'], 'comments_count': post['comments_count']}
 
 saveCount(count, count_filename)
