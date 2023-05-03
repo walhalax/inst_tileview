@@ -155,6 +155,7 @@ else:
 
             # Plot the summary chart
             sns.set_style("whitegrid")
+            sns.set(font='IPAexGothic')
             fig, ax1 = plt.subplots(figsize=(12, 6))
             ax2 = ax1.twinx()
             sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Followers_Diff"], ax=ax1, color="blue", label="フォロワー")
@@ -213,6 +214,7 @@ else:
                             daily_df["Comments_Diff"] = daily_df["Comments"].diff().fillna(0)
 
                             sns.set_style("whitegrid")
+                            sns.set(font='IPAexGothic')
                             fig, ax1 = plt.subplots(figsize=(6, 3))
                             ax2 = ax1.twinx()
                             sns.lineplot(x=daily_df['Date'], y=daily_df["Likes_Diff"], ax=ax1, color="orange", label="いいね")
