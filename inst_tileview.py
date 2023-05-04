@@ -150,14 +150,13 @@ else:
             daily_diff_df = pd.DataFrame(daily_diff)
             daily_diff_df["Likes_Diff"] = daily_diff_df["Likes"].diff().fillna(0)
             daily_diff_df["Comments_Diff"] = daily_diff_df["Comments"].diff().fillna(0)
-            daily_diff_df["Followers_Diff"] = daily_diff_df["Followers"].diff().fillna(0)
 
             # Plot the summary chart
             sns.set_style("darkgrid")
             sns.set(font='IPAexGothic')
             fig, ax1 = plt.subplots(figsize=(12, 6))
             ax2 = ax1.twinx()
-            sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Followers_Diff"], ax=ax1, color="blue", label="フォロワー")
+            sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Followers"], ax=ax1, color="blue", label="フォロワー")
             sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Likes_Diff"], ax=ax1, color="orange", label="いいね")
             sns.lineplot(x=daily_diff_df['Date'], y=daily_diff_df["Comments_Diff"], ax=ax2, color="green", label="コメント")
             h1, l1 = ax1.get_legend_handles_labels()
