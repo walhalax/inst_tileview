@@ -9,11 +9,10 @@ import pandas as pd
 import numpy as np
 import japanize_matplotlib
 import matplotlib.pyplot as plt
-from matplotlib.ticker import FixedLocator
 
 def basic_info():
     config = dict()
-    config["access_token"] = st.secrets["access_token"]
+    config["access_token"] = st.secrets["instagram_access_token"]
     config['instagram_account_id'] = st.secrets.get("instagram_account_id", "")
     config["version"] = 'v16.0'
     config["graph_domain"] = 'https://graph.facebook.com/'
@@ -130,7 +129,7 @@ else:
                 total_comment_diff += comment_count_diff
 
         st.markdown(
-            f'<h4 style="font-size:1.2em;">フォロワー: {followers_count} ({"+" if follower_diff > 0 else ("-" if follower_diff < 0 else "")}{abs(follower_diff)}) / 当日いいね数: {total_like_diff} / 当日コメント数: {total_comment_diff}</h4>',
+            f'<h4 style="font-size:1.2em;">👥: {followers_count} ({"+" if follower_diff > 0 else ("-" if follower_diff < 0 else "")}{abs(follower_diff)}) / 当日👍: {total_like_diff} / 当日💬: {total_comment_diff}</h4>',
             unsafe_allow_html=True)
 
         if show_summary_chart:
@@ -154,7 +153,7 @@ else:
             daily_diff_df["Followers_Diff"] = daily_diff_df["Followers"].diff().fillna(0)
 
             # Plot the summary chart
-            sns.set_style("whitegrid")
+            sns.set_style("darkgrid")
             sns.set(font='IPAexGothic')
             fig, ax1 = plt.subplots(figsize=(12, 6))
             ax2 = ax1.twinx()
@@ -168,7 +167,7 @@ else:
             ax1.set_ylabel("フォロワー数/全いいね数")
             ax2.set_ylabel("全コメント数")
             ax1.set_xlim([daily_diff_df['Date'].min(), daily_diff_df['Date'].max()])
-            ax1.set_xticklabels([d.strftime('%m/%d') for d in daily_diff_df['Date']])
+            ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_diff_df['Date']])
             plt.xticks(rotation=45)
             st.pyplot(fig)
 
@@ -213,7 +212,7 @@ else:
                             daily_df["Likes_Diff"] = daily_df["Likes"].diff().fillna(0)
                             daily_df["Comments_Diff"] = daily_df["Comments"].diff().fillna(0)
 
-                            sns.set_style("whitegrid")
+                            sns.set_style("darkgrid")
                             sns.set(font='IPAexGothic')
                             fig, ax1 = plt.subplots(figsize=(6, 3))
                             ax2 = ax1.twinx()
@@ -226,7 +225,7 @@ else:
                             ax1.set_ylabel("いいね数")
                             ax2.set_ylabel("コメント数")
                             ax1.set_xlim([daily_df['Date'].min(), daily_df['Date'].max()])
-                            ax1.set_xticklabels([d.strftime('%m/%d') for d in daily_df['Date']])  # daily_diff_df を daily_df に変更しました。
+                            ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_df['Date']])
                             plt.xticks(rotation=45)
                             st.pyplot(fig)
 
