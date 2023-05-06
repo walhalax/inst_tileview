@@ -217,7 +217,7 @@ else:
 
                             sns.set_style("darkgrid")
                             sns.set(font='IPAexGothic')
-                            fig, ax1 = plt.subplots(figsize=(6, 3))
+                            fig, ax1 = plt.subplots(figsize=(5, 3))
                             ax2 = ax1.twinx()
                             sns.lineplot(x=daily_df['Date'], y=daily_df["Likes_Diff"], ax=ax1, color="orange", label="いいね")
                             sns.lineplot(x=daily_df['Date'], y=daily_df["Comments_Diff"], ax=ax2, color="green", label="コメント")
