@@ -9,6 +9,7 @@ import pandas as pd
 import numpy as np
 import japanize_matplotlib
 import matplotlib.pyplot as plt
+import matplotlib.ticker as ticker
 
 def basic_info():
     config = dict()
@@ -169,6 +170,8 @@ else:
             ax1.set_xticks(daily_diff_df['Date'].unique())
             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_diff_df['Date']])
             plt.xticks(rotation=45)
+            ax1.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+            ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
             st.pyplot(fig)
 
         for post_group in post_groups:
@@ -228,6 +231,8 @@ else:
                             ax1.set_xticks(daily_df['Date'].unique())
                             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_df['Date']])
                             plt.xticks(rotation=45)
+                            ax1.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+                            ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
                             st.pyplot(fig)
 
                             if show_description:
