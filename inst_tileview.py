@@ -230,9 +230,11 @@ else:
                             ax1.set_xlim([daily_df['Date'].min(), daily_df['Date'].max()])
                             ax1.set_xticks(daily_df['Date'].unique())
                             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_df['Date']])
+                            ax1.yaxis.get_major_formatter().set_useOffset(False)
+                            ax1.yaxis.get_major_formatter().set_scientific(False)
+                            ax2.yaxis.get_major_formatter().set_useOffset(False)
+                            ax2.yaxis.get_major_formatter().set_scientific(False)
                             plt.xticks(rotation=45)
-                            ax1.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-                            ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
                             st.pyplot(fig)
 
                             if show_description:
