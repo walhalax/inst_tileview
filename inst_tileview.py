@@ -169,9 +169,9 @@ else:
             ax1.set_xlim([daily_diff_df['Date'].min(), daily_diff_df['Date'].max()])
             ax1.set_xticks(daily_diff_df['Date'].unique())
             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_diff_df['Date']])
-            plt.xticks(rotation=45)
             ax1.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
             ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+            plt.xticks(rotation=45)
             st.pyplot(fig)
 
         for post_group in post_groups:
@@ -230,10 +230,8 @@ else:
                             ax1.set_xlim([daily_df['Date'].min(), daily_df['Date'].max()])
                             ax1.set_xticks(daily_df['Date'].unique())
                             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_df['Date']])
-                            ax1.yaxis.get_major_formatter().set_useOffset(False)
-                            ax1.yaxis.get_major_formatter().set_scientific(False)
-                            ax2.yaxis.get_major_formatter().set_useOffset(False)
-                            ax2.yaxis.get_major_formatter().set_scientific(False)
+                            ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))  # ここを追加
+                            ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))  # ここを追加
                             plt.xticks(rotation=45)
                             st.pyplot(fig)
 
