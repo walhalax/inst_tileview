@@ -4,4 +4,4 @@ plotly
 seaborn
 pandas
 japanize_matplotlib
-Github
+PyGithub
