@@ -80,9 +80,8 @@ def saveCount(count, filename, config):
     else:
         print(f"Creating count.json as it does not exist in the repository")
         data = {
-            "message": "Update count.json",
+            "message": "Create count.json",
             "content": base64.b64encode(json.dumps(count).encode("utf-8")).decode("utf-8"),
-            "sha": sha
         }
         req = requests.put(url, headers=headers, data=json.dumps(data))
         if req.status_code == 201:
@@ -90,6 +89,17 @@ def saveCount(count, filename, config):
         else:
             print(f"Error: Request failed with status code {req.status_code}")
         return
+
+    update_data = {
+        "message": "Update count.json",
+        "content": base64.b64encode(json.dumps(count).encode("utf-8")).decode("utf-8"),
+        "sha": sha
+    }
+    update_req = requests.put(url, headers=headers, data=json.dumps(update_data))
+    if update_req.status_code == 200:
+        print("count.json updated successfully")
+    else:
+        print(f"Error: Request failed with status code {update_req.status_code}")
 
 def getCount(filename, config):
     headers = {"Authorization": f"token {config['github_token']}"}
@@ -107,12 +117,14 @@ params = basic_info()
 count_filename = params["github_path"]
 
 if not params['instagram_account_id']:
-    st.write('.envファイルでinstagram_account_idを確認')
+    st.write('instagram_account_idが無効')
 else:
     response = getUserMedia(params)
     user_response = getUser(params)
+   # print("getUserMedia response: ", response) #データ取得チェック用コマンド
+   # print("getUser response: ", user_response) #データ取得チェック用コマンド
     if not response or not user_response:
-        st.write('.envファイルでaccess_tokenを確認')
+        st.write('access_tokenを無効')
     else:
         posts = response['json_data']['data'][::-1]
         user_data = user_response['json_data']
@@ -157,6 +169,8 @@ else:
                 max_comment_diff = max(comment_count_diff, max_comment_diff)
                 total_like_diff += like_count_diff
                 total_comment_diff += comment_count_diff
+                count[today][post['id']] = {'like_count': post['like_count'], 'comments_count': post['comments_count']}
+        saveCount(count, count_filename, params)
 
         st.markdown(
             f'<h4 style="font-size:1.2em;">👥: {followers_count} ({"+" if follower_diff > 0 else ("-" if follower_diff < 0 else "")}{abs(follower_diff)}) / 当日👍: {total_like_diff} / 当日💬: {total_comment_diff}</h4>',
