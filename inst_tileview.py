@@ -10,6 +10,8 @@ import numpy as np
 import japanize_matplotlib
 import matplotlib.pyplot as plt
 import matplotlib.ticker as ticker
+from github import Github
+import base64
 
 def basic_info():
     config = dict()
@@ -18,6 +20,9 @@ def basic_info():
     config["version"] = 'v16.0'
     config["graph_domain"] = 'https://graph.facebook.com/'
     config["endpoint_base"] = config["graph_domain"] + config["version"] + '/'
+    config["github_token"] = st.secrets["github_token"]
+    config["github_repo"] = st.secrets["github_repo"]
+    config["github_path"] = "count.json"
     return config
 
 def InstaApiCall(url, params, request_type):
@@ -60,21 +65,45 @@ def getUser(params):
 
     return InstaApiCall(url, Params, 'GET')
 
-def saveCount(count, filename):
-    with open(filename, 'w') as f:
-        json.dump(count, f, indent=4)
+def saveCount(count, filename, config):
+    headers = {"Authorization": f"token {config['github_token']}"}
+    url = f"https://api.github.com/repos/{config['github_repo']}/contents/{filename}"    
+    req = requests.get(url, headers=headers)
 
-def getCount(filename):
-    try:
-        with open(filename, 'r') as f:
-            return json.load(f)
-    except (FileNotFoundError, json.decoder.JSONDecodeError):
+    if req.status_code == 200:
+        content = json.loads(req.content)
+        if "sha" in content:
+            sha = content["sha"]
+        else:
+            print("Error: 'sha' key not found in the content.")
+            return
+    else:
+        print(f"Creating count.json as it does not exist in the repository")
+        data = {
+            "message": "Create count.json",
+            "content": base64.b64encode(json.dumps(count).encode("utf-8")).decode("utf-8"),
+        }
+        req = requests.put(url, headers=headers, data=json.dumps(data))
+        if req.status_code == 201:
+            print("count.json created successfully")
+        else:
+            print(f"Error: Request failed with status code {req.status_code}")
+        return
+
+def getCount(filename, config):
+    headers = {"Authorization": f"token {config['github_token']}"}
+    url = f"https://api.github.com/repos/{config['github_repo']}/contents/{filename}"
+    req = requests.get(url, headers=headers)
+    if req.status_code == 200:
+        content = base64.b64decode(json.loads(req.content)["content"]).decode("utf-8")
+        return json.loads(content)
+    else:
         return {}
 
 st.set_page_config(layout="wide")
 params = basic_info()
 
-count_filename = "count.json"
+count_filename = params["github_path"]
 
 if not params['instagram_account_id']:
     st.write('.envファイルでinstagram_account_idを確認')
@@ -94,8 +123,7 @@ else:
         BOX_HEIGHT = 400
 
         yesterday = (datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))) - datetime.timedelta(days=1)).strftime('%Y-%m-%d')
-        follower_diff = followers_count - getCount(count_filename).get(yesterday, {}).get('followers_count', followers_count)
-
+        follower_diff = followers_count - getCount(count_filename, params).get(yesterday, {}).get('followers_count', followers_count)
         upper_menu = st.expander("メニューを開閉", expanded=False)
         with upper_menu:
             show_description = st.checkbox("キャプションを表示")
@@ -105,7 +133,7 @@ else:
         posts.reverse()
         post_groups = [list(filter(None, group)) for group in zip_longest(*[iter(posts)] * NUM_COLUMNS)]
 
-        count = getCount(count_filename)
+        count = getCount(count_filename, params)
         today = datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%Y-%m-%d')
 
         if today not in count:
@@ -239,7 +267,5 @@ else:
                                 st.write(caption or "No caption provided")
                             else:
                                 st.write("")
-
                             count[today][post['id']] = {'like_count': post['like_count'], 'comments_count': post['comments_count']}
-
-saveCount(count, count_filename)
+saveCount(count, count_filename, params)
