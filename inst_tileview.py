@@ -169,8 +169,8 @@ else:
             ax1.set_xlim([daily_diff_df['Date'].min(), daily_diff_df['Date'].max()])
             ax1.set_xticks(daily_diff_df['Date'].unique())
             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_diff_df['Date']])
-            ax1.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
-            ax2.yaxis.set_major_locator(ticker.MaxNLocator(integer=True))
+            ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
+            ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
             plt.xticks(rotation=45)
             st.pyplot(fig)
 
@@ -230,8 +230,8 @@ else:
                             ax1.set_xlim([daily_df['Date'].min(), daily_df['Date'].max()])
                             ax1.set_xticks(daily_df['Date'].unique())
                             ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_df['Date']])
-                            ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))  # ここを追加
-                            ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))  # ここを追加
+                            ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
+                            ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
                             plt.xticks(rotation=45)
                             st.pyplot(fig)
 
