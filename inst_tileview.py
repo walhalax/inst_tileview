@@ -80,8 +80,9 @@ def saveCount(count, filename, config):
     else:
         print(f"Creating count.json as it does not exist in the repository")
         data = {
-            "message": "Create count.json",
+            "message": "Update count.json",
             "content": base64.b64encode(json.dumps(count).encode("utf-8")).decode("utf-8"),
+            "sha": sha
         }
         req = requests.put(url, headers=headers, data=json.dumps(data))
         if req.status_code == 201:
