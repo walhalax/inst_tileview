@@ -282,5 +282,3 @@ else:
                                 st.write(caption or "No caption provided")
                             else:
                                 st.write("")
-                            count[today][post['id']] = {'like_count': post['like_count'], 'comments_count': post['comments_count']}
-saveCount(count, count_filename, params)
