@@ -278,7 +278,7 @@ else:
                             plt.xticks(rotation=45)
                             st.pyplot(fig)
 
-                            if show_description:
+                            if show_description and not show_likes_comments_chart:
                                 st.write(caption or "No caption provided")
                             else:
-                                st.write("")
+                                st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
