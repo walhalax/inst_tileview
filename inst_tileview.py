@@ -141,7 +141,7 @@ else:
         with upper_menu:
             show_description = st.checkbox("キャプションを表示")
             show_summary_chart = st.checkbox("サマリーチャートを表示")
-            show_likes_comments_chart = st.checkbox("いいね/コメント数チャートの表示")
+            show_likes_comments_chart = st.checkbox("各投稿チャートの表示")
 
         posts.reverse()
         post_groups = [list(filter(None, group)) for group in zip_longest(*[iter(posts)] * NUM_COLUMNS)]
