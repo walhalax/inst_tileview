@@ -154,8 +154,8 @@ else:
 
         count[today]['followers_count'] = followers_count
 
-        if datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%H:%M') == '23:59':
-            count[yesterday] = count[today]
+       # if datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%H:%M') == '23:59':
+           # count[yesterday] = count[today]
 
         max_like_diff = 0
         max_comment_diff = 0
