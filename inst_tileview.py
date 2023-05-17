@@ -53,6 +53,7 @@ def getUserMedia(params, pagingUrl=''):
 
     return InstaApiCall(url, Params, 'GET')
 
+
 def getUser(params):
     Params = dict()
     Params['fields'] = 'followers_count'
@@ -67,7 +68,7 @@ def getUser(params):
 
 def saveCount(count, filename, config):
     headers = {"Authorization": f"token {config['github_token']}"}
-    url = f"https://api.github.com/repos/{config['github_repo']}/contents/{filename}"    
+    url = f"https://api.github.com/repos/{config['github_repo']}/contents/{filename}"
     req = requests.get(url, headers=headers)
 
     if req.status_code == 200:
@@ -88,7 +89,7 @@ def saveCount(count, filename, config):
             print("count.json created successfully")
         else:
             print(f"Error: Request failed with status code {req.status_code}")
-        return
+            return
 
     update_data = {
         "message": "Update count.json",
@@ -105,11 +106,24 @@ def getCount(filename, config):
     headers = {"Authorization": f"token {config['github_token']}"}
     url = f"https://api.github.com/repos/{config['github_repo']}/contents/{filename}"
     req = requests.get(url, headers=headers)
+
     if req.status_code == 200:
         content = base64.b64decode(json.loads(req.content)["content"]).decode("utf-8")
         return json.loads(content)
     else:
         return {}
+
+def get_xticklabels(dates):
+    prev_month = None
+    labels = []
+    for d in dates:
+        month = d.month
+        if prev_month is None or prev_month != month:
+            labels.append(d.strftime('%-m/%-d'))
+        else:
+            labels.append(d.strftime('%-d'))
+        prev_month = month
+    return labels
 
 st.set_page_config(layout="wide")
 params = basic_info()
@@ -121,8 +135,6 @@ if not params['instagram_account_id']:
 else:
     response = getUserMedia(params)
     user_response = getUser(params)
-   # print("getUserMedia response: ", response) #データ取得チェック用コマンド
-   # print("getUser response: ", user_response) #データ取得チェック用コマンド
     if not response or not user_response:
         st.write('access_tokenを無効')
     else:
@@ -154,15 +166,13 @@ else:
 
         count[today]['followers_count'] = followers_count
 
-       # if datetime.datetime.now(datetime.timezone(datetime.timedelta(hours=9))).strftime('%H:%M') == '23:59':
-           # count[yesterday] = count[today]
-
         max_like_diff = 0
         max_comment_diff = 0
         total_like_diff = 0
         total_comment_diff = 0
         for post_group in post_groups:
             for post in post_group:
+
                 like_count_diff = post['like_count'] - count.get(yesterday, {}).get(post['id'], {}).get('like_count', post['like_count'])
                 comment_count_diff = post['comments_count'] - count.get(yesterday, {}).get(post['id'], {}).get('comments_count', post['comments_count'])
                 max_like_diff = max(like_count_diff, max_like_diff)
@@ -211,7 +221,9 @@ else:
             ax2.set_ylabel("全コメント数")
             ax1.set_xlim([daily_diff_df['Date'].min(), daily_diff_df['Date'].max()])
             ax1.set_xticks(daily_diff_df['Date'].unique())
-            ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_diff_df['Date']])
+
+            ax1.set_xticklabels(get_xticklabels(daily_diff_df['Date']))
+
             ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
             ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
             plt.xticks(rotation=45)
@@ -241,19 +253,20 @@ else:
                             caption = caption.replace("[model]", "👗")
                             caption = caption.replace("[Equip]", "📷")
                             caption = caption.replace("[Develop]", "🖨")
-                            if show_description:
-                                st.write(caption or "No caption provided")
-                            else:
-                                st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
+                        if show_description:
+                            st.write(caption or "No caption provided")
+                        else:
+                            st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
 
+                        # show_likes_comments_chart
                         if show_likes_comments_chart:
                             post_id = post['id']
                             daily_data = []
                             for key, value in count.items():
                                 date = datetime.datetime.strptime(key, "%Y-%m-%d")
                                 daily_data.append({"Date": date,
-                                                    "Likes": value.get(post_id, {}).get("like_count", 0),
-                                                    "Comments": value.get(post_id, {}).get("comments_count", 0)})
+                                                   "Likes": value.get(post_id, {}).get("like_count", 0),
+                                                   "Comments": value.get(post_id, {}).get("comments_count", 0)})
                             daily_df = pd.DataFrame(daily_data)
                             daily_df["Likes_Diff"] = daily_df["Likes"].diff().fillna(0)
                             daily_df["Comments_Diff"] = daily_df["Comments"].diff().fillna(0)
@@ -272,13 +285,15 @@ else:
                             ax2.set_ylabel("コメント数")
                             ax1.set_xlim([daily_df['Date'].min(), daily_df['Date'].max()])
                             ax1.set_xticks(daily_df['Date'].unique())
-                            ax1.set_xticklabels([d.strftime('%-m/%-d') for d in daily_df['Date']])
+
+                            ax1.set_xticklabels(get_xticklabels(daily_df['Date']))
+
                             ax1.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
                             ax2.yaxis.set_major_formatter(ticker.FuncFormatter(lambda x, pos: '{:,.0f}'.format(x)))
                             plt.xticks(rotation=45)
                             st.pyplot(fig)
 
-                            if show_description and not show_likes_comments_chart:
-                                st.write(caption or "No caption provided")
-                            else:
-                                st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
+                        if show_description and not show_likes_comments_chart:
+                            st.write(caption or "No caption provided")
+                        else:
+                            st.write(caption[:0] if caption is not None and len(caption) > 50 else caption or "No caption provided")
